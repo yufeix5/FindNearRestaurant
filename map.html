@@ -47,9 +47,11 @@
       <p>Click anywhere to check for Restaurant in 1km range.</p>
     </div>
     <script>
+    
       mapboxgl.accessToken =
         "pk.eyJ1IjoibGV4aXhpYSIsImEiOiJjbDhwaGJqdXowN243M3BvMDNxYXl1bjNuIn0.ilolMGy181XT-Bnt0hMaYg";
 
+        var currentMarker = [];
       var map = new mapboxgl.Map({
         container: "map",
         style: "mapbox://styles/mapbox/light-v10", // stylesheet location
@@ -60,7 +62,7 @@
       var popup = new mapboxgl.Popup({
         offset: [0, -7],
         closeButton: false,
-        closeOnClick: false
+        closeOnClick: false,
       });
 
       map.on("load", function () {
@@ -125,11 +127,22 @@
             .setData(turf.featureCollection(featuresInBuffer));
         }
         updateMarker();
+
+        if(currentMarker.length > 0) {
+            currentMarker[0].remove();
+            currentMarker = [];
+        }
+
+        var marker = new mapboxgl.Marker()
+          .setLngLat(eventLngLat)
+          .addTo(map)
+        
+        currentMarker.push(marker);
       });
+
 
       // click on polygons
       map.on("mousemove", "foods", (e) => {
-
         var name = e.features[0].properties.NAME;
         var description = e.features[0].properties.DESCRIPTION;
         var address = e.features[0].properties.ADDRESS;
@@ -137,7 +150,16 @@
 
         popup
           .setLngLat(e.lngLat)
-          .setHTML('<h3>'+ name + '</h3><p>' + description + '</p><h4>Address: </h4>' + address + '</p><h4>Phone: </h4>' + phone)
+          .setHTML(
+            "<h3>" +
+              name +
+              "</h3><p>" +
+              description +
+              "</p><h4>Address: </h4>" +
+              address +
+              "</p><h4>Phone: </h4>" +
+              phone
+          )
           .addTo(map);
       });
 
@@ -145,9 +167,9 @@
         popup.remove();
       });
 
-    //   map.on("mouseleave", "foods", (e) => {
-    //     popup.remove();
-    //   });
+      //   map.on("mouseleave", "foods", (e) => {
+      //     popup.remove();
+      //   });
 
       //makeRadius function
       function makeRadius(lngLatArray, radiusInMeters) {
