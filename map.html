@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Find Near Restaurant</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700"
+      rel="stylesheet"
+    />
+    <!-- Mapbox GL JS -->
+    <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.js"></script>
+    <link
+      href="https://api.tiles.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.css"
+      rel="stylesheet"
+    />
+    <!-- Turf.js plugin -->
+    <script src="https://npmcdn.com/@turf/turf/turf.min.js"></script>
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+      }
+      #instructions {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background-color: #fff;
+        padding: 5px 20px 5px 20px;
+        border-radius: 10px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="map"></div>
+    <div id="instructions">
+      <h2>Instructions</h2>
+      <p>Click anywhere to check for Restaurant in 1km range.</p>
+    </div>
+    <script>
+      mapboxgl.accessToken =
+        "pk.eyJ1IjoibGV4aXhpYSIsImEiOiJjbDhwaGJqdXowN243M3BvMDNxYXl1bjNuIn0.ilolMGy181XT-Bnt0hMaYg";
+
+      var map = new mapboxgl.Map({
+        container: "map",
+        style: "mapbox://styles/mapbox/light-v10", // stylesheet location
+        center: [-122.3032, 47.655548], // starting position near Roswell, NM
+        zoom: 13, // starting zoom
+      });
+
+      var popup = new mapboxgl.Popup({
+        offset: [0, -7],
+        closeButton: false,
+        closeOnClick: false
+      });
+
+      map.on("load", function () {
+        //Map layers
+        map.addSource("foods", {
+          type: "geojson",
+          data: "assets/uniquefood.geojson",
+        });
+        map.addLayer({
+          id: "foods",
+          source: "foods",
+          type: "circle",
+          paint: {
+            "circle-color": "#5555f6",
+            "circle-radius": 8,
+            "circle-opacity": 0.5,
+          },
+        });
+
+        // When the map has finished loading, add a new layer that will be empty
+        // at first, but will eventually show our selected food sites.
+        map.addLayer({
+          id: "foods-truth",
+          source: {
+            type: "geojson",
+            data: { type: "FeatureCollection", features: [] },
+          },
+          type: "symbol",
+          layout: {
+            "icon-image": "restaurant-11",
+            "icon-size": 1,
+            "icon-allow-overlap": true,
+          },
+        });
+
+        // Draw the foods search radius on the map
+        map.addLayer({
+          id: "search-radius",
+          source: {
+            type: "geojson",
+            data: { type: "FeatureCollection", features: [] },
+          },
+          type: "fill",
+          paint: {
+            "fill-color": "#F1CF65",
+            "fill-opacity": 0.3,
+          },
+        });
+      });
+
+      //Click event
+      map.on("click", function (e) {
+        var eventLngLat = [e.lngLat.lng, e.lngLat.lat];
+        console.log(eventLngLat);
+        var searchRadius = makeRadius(eventLngLat, 1000);
+        map.getSource("search-radius").setData(searchRadius);
+        async function updateMarker() {
+          var featuresInBuffer = await spatialJoin(searchRadius);
+          console.log(featuresInBuffer);
+          map
+            .getSource("foods-truth")
+            .setData(turf.featureCollection(featuresInBuffer));
+        }
+        updateMarker();
+      });
+
+      // click on polygons
+      map.on("mousemove", "foods", (e) => {
+
+        var name = e.features[0].properties.NAME;
+        var description = e.features[0].properties.DESCRIPTION;
+        var address = e.features[0].properties.ADDRESS;
+        var phone = e.features[0].properties.PHONE;
+
+        popup
+          .setLngLat(e.lngLat)
+          .setHTML('<h3>'+ name + '</h3><p>' + description + '</p><h4>Address: </h4>' + address + '</p><h4>Phone: </h4>' + phone)
+          .addTo(map);
+      });
+
+      map.on("mouseleave", "foods", (e) => {
+        popup.remove();
+      });
+
+    //   map.on("mouseleave", "foods", (e) => {
+    //     popup.remove();
+    //   });
+
+      //makeRadius function
+      function makeRadius(lngLatArray, radiusInMeters) {
+        var point = turf.point(lngLatArray);
+        var buffered = turf.buffer(point, radiusInMeters, { units: "meters" });
+        return buffered;
+      }
+
+      function fetchJSON(url) {
+        return fetch(url).then(function (response) {
+          return response.json();
+        });
+      }
+
+      //spatialJoin function
+      async function spatialJoin(filterFeature) {
+        // Loop through all the features in the source geojson and return the ones that
+        // are inside the filter feature (buffered radius)
+        const data = await fetch("assets/uniquefood.geojson").then(
+          (response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error ${response.status}`);
+            }
+            return response.json();
+          }
+        );
+        // console.log(data);
+        var joined = data.features.filter(function (feature) {
+          return turf.booleanPointInPolygon(feature, filterFeature);
+        });
+        return joined;
+      }
+    </script>
+  </body>
+</html>
