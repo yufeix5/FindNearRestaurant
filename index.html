@@ -17,6 +17,14 @@
     <!-- Turf.js plugin -->
     <script src="https://npmcdn.com/@turf/turf/turf.min.js"></script>
 
+    <!-- Mapbox geocoder -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.0/mapbox-gl-geocoder.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.0/mapbox-gl-geocoder.css"
+      type="text/css"
+    />
+
     <style>
       body {
         margin: 0;
@@ -47,15 +55,14 @@
       <p>Click anywhere to check for Restaurant in 1km range.</p>
     </div>
     <script>
-    
       mapboxgl.accessToken =
         "pk.eyJ1IjoibGV4aXhpYSIsImEiOiJjbDhwaGJqdXowN243M3BvMDNxYXl1bjNuIn0.ilolMGy181XT-Bnt0hMaYg";
 
-        var currentMarker = [];
+      var currentMarker = [];
       var map = new mapboxgl.Map({
         container: "map",
-        style: "mapbox://styles/mapbox/light-v10", // stylesheet location
-        center: [-122.3032, 47.655548], // starting position near Roswell, NM
+        style: "mapbox://styles/lexixia/clblf6oja000d15pa9alqxxy9", // stylesheet location
+        center: [-122.3032, 47.655548], // starting position UW
         zoom: 13, // starting zoom
       });
 
@@ -64,6 +71,26 @@
         closeButton: false,
         closeOnClick: false,
       });
+
+      // geocoder
+      const geocoder = new MapboxGeocoder({
+        // Initialize the geocoder
+        accessToken: mapboxgl.accessToken, // Set the access token
+        mapboxgl: mapboxgl, // Set the mapbox-gl instance
+        marker: false, // Do not use the default marker style
+        placeholder: "Search for places in Seattle", // Placeholder text for the search bar
+        bbox: [-122.5, 37.49, -122.23715, 47.7], // Boundary for seattle
+        proximity: {
+          longitude: -122.31,
+          latitude: 47.65,
+        }, // Coordinates of U district
+      });
+
+      // Add the geocoder to the map
+      map.addControl(geocoder);
+
+      // Add zoom and rotation controls to the map.
+      map.addControl(new mapboxgl.NavigationControl());
 
       map.on("load", function () {
         //Map layers
@@ -92,7 +119,7 @@
           },
           type: "symbol",
           layout: {
-            "icon-image": "restaurant-11",
+            "icon-image": "restaurant",
             "icon-size": 1,
             "icon-allow-overlap": true,
           },
@@ -128,18 +155,15 @@
         }
         updateMarker();
 
-        if(currentMarker.length > 0) {
-            currentMarker[0].remove();
-            currentMarker = [];
+        if (currentMarker.length > 0) {
+          currentMarker[0].remove();
+          currentMarker = [];
         }
 
-        var marker = new mapboxgl.Marker()
-          .setLngLat(eventLngLat)
-          .addTo(map)
-        
+        var marker = new mapboxgl.Marker().setLngLat(eventLngLat).addTo(map);
+
         currentMarker.push(marker);
       });
-
 
       // click on polygons
       map.on("mousemove", "foods", (e) => {
