@@ -39,16 +39,16 @@ We only wanted information about the restaurants in general, like the seating, t
 
 **DESCRIPTION:** Number of seating and risk category. According to [King County’s website](https://kingcounty.gov/depts/health/environmental-health/food-safety/inspection-system/search.aspx#/), “Risk categories are determined by the complexity of the businesses' food processing and handling.” From our observations, Risk I seems to apply to convenience stores like Circle K. Risk II seems to apply to school lunch programs like elementary schools. Risk III seems to apply to sit down restaurants like UW’s Saint Bread and Agua Verde.
 
-**ADDRESS:** Address of the restaurants. 
-**CITY:** Seattle 
-**ZIP.CODE:** Zip Code of the region where restaurants are located. 
+**ADDRESS:** Address of the restaurants.  
+**CITY:** Seattle  
+**ZIP.CODE:** Zip Code of the region where restaurants are located.  
 
 **PHONE:** Contact information of the restaurant. This is probably not the same one used to make delivery orders, but is more likely the owner’s contact number since multiple establishments can share a number. For example, the (206) 722-6400 number is shared by a Tutta Bella restaurant and a Tutta Bella mobile food unit. The (972) 828-6928 number is shared by five different 7-Elevens.
 
-**LONGITUDE:** Geographical coordinates of the restaurants.
-**LATITUDE:** Geographical coordinates of the restaurants.
-**BUSINESS_ID:** Unique identification for each restaurant.
-**GRADE:** Food establishment grade. 
+**LONGITUDE:** Geographical coordinates of the restaurants.  
+**LATITUDE:** Geographical coordinates of the restaurants.  
+**BUSINESS_ID:** Unique identification for each restaurant.  
+**GRADE:** Food establishment grade.  
 
 ## Applied libraries (e.g., mapbox gl js) and Web Services (e.g., github, basemap) in use 
 
